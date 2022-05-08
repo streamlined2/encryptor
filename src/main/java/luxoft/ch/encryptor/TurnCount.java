@@ -6,4 +6,5 @@ enum TurnCount {
 	public static TurnCount getTurnCount(int count) {
 		return values()[count % values().length];
 	}
+
 }
