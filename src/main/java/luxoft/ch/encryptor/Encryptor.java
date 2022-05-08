@@ -5,7 +5,12 @@ import java.util.stream.Stream;
 
 public class Encryptor {
 
+	private static final String DEMO_MESSAGE = """
+			Hello, my darling! Glad to see you again! How is it going? Is it warm or cold outside? Is it raining or snowing? Let's have a cup of tea together at the cafe nearby.""";
 	private static final int BOARD_SIDE = 6;
+	private static final Grill SAMPLE_GRILL = new Grill(new Position(0, 1), new Position(0, 3), new Position(0, 5),
+			new Position(1, 4), new Position(2, 2), new Position(3, 1), new Position(3, 4), new Position(4, 5),
+			new Position(5, 3));
 
 	private final Board board;
 	private final Grill grill;
@@ -16,13 +21,13 @@ public class Encryptor {
 	}
 
 	public String encrypt(String... text) {
-		Message message = new Message(getBoardSize(), text);
+		final Message message = new Message(board.getSize(), text);
 		putDownMessage(message);
 		return board.readMessage();
 	}
 
 	private void putDownMessage(Message message) {
-		int numberOfParts = getNumberOfParts(message);
+		final int numberOfParts = getNumberOfParts(message);
 		for (int partNo = 0; partNo < numberOfParts; partNo++) {
 			putDownMessagePart(message, partNo);
 		}
@@ -34,9 +39,8 @@ public class Encryptor {
 
 	private void putDownMessagePart(Message message, int partNo) {
 		int index = partNo * grill.size();
-		TurnCount turnCount = TurnCount.getTurnCount(partNo);
 		for (Position position : grill) {
-			board.putDownChar(message.getChar(index++), position, turnCount);
+			board.putDownChar(message.getChar(index++), position, partNo);
 		}
 	}
 
@@ -46,39 +50,38 @@ public class Encryptor {
 	}
 
 	private Message retrieveMessage() {
-		Message message = new Message();
-		int numberOfParts = getBoardSize() / grill.size();
+		final Message message = new Message();
+		final int numberOfParts = board.getSize() / grill.size();
 		for (int partNo = 0; partNo < numberOfParts; partNo++) {
 			message.append(retrieveMessagePart(partNo));
 		}
 		return message;
 	}
 
-	private int getBoardSize() {
-		return BOARD_SIDE * BOARD_SIDE;
-	}
-
 	private Message retrieveMessagePart(int partNo) {
-		TurnCount turnCount = TurnCount.getTurnCount(partNo);
-		Message message = new Message();
+		final Message message = new Message();
 		for (Position position : grill) {
-			message.append(board.retrieveChar(position, turnCount));
+			message.append(board.retrieveChar(position, partNo));
 		}
 		return message;
 	}
 
 	public static void main(String... args) {
-		if (args.length < 1)
-			throw new IllegalArgumentException("please pass at least one word as message");
-		final String text = Stream.of(args).collect(Collectors.joining(" "));
-		Grill grill = new Grill(new Position(0, 1), new Position(0, 3), new Position(0, 5), new Position(1, 4),
-				new Position(2, 2), new Position(3, 1), new Position(3, 4), new Position(4, 5), new Position(5, 3));
-		Board board = new Board(BOARD_SIDE);
-		Encryptor encryptor = new Encryptor(board, grill);
+		String text = DEMO_MESSAGE;
+		if (args.length >= 1) {
+			text = Stream.of(args).collect(Collectors.joining(" "));
+		}
+		Board board = new Board(BOARD_SIDE, text);
+		Encryptor encryptor = new Encryptor(board, SAMPLE_GRILL);
 		String encryptedMessage = encryptor.encrypt(text);
-		System.out.printf("Source message: %s%nEncrypted message: %s%n", text, encryptedMessage);
+		System.out.printf("Original message: %s%nEncrypted message: %s%n", text, encryptedMessage);
 		String decryptedMessage = encryptor.decrypt(encryptedMessage);
 		System.out.printf("Decrypted message: %s%n", decryptedMessage);
+		if (text.equals(decryptedMessage)) {
+			System.out.println("Success! Original and decrypted messages coincide.");
+		} else {
+			System.out.println("Program failed, as original and decrypted messages are different.");
+		}
 	}
 
 }

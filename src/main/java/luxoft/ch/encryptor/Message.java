@@ -20,12 +20,12 @@ class Message {
 	}
 
 	private void pad(int boardSize) {
-		for (int rest = getNewSize(boardSize) - text.length(); rest > 0; rest--) {
+		for (int rest = getPaddedSize(boardSize) - text.length(); rest > 0; rest--) {
 			text.append(PAD_CHAR);
 		}
 	}
 
-	private int getNewSize(int boardSize) {
+	private int getPaddedSize(int boardSize) {
 		if (text.length() % boardSize == 0) {
 			return text.length();
 		}
